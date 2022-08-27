@@ -3,6 +3,7 @@ import UIKit
 /// The `PageViewControllerDelegate` protocol defines methods that
 /// can used to determine when the user navigates between view
 /// controllers.
+@objc
 public protocol PageViewControllerDelegate: AnyObject {
     /// Called whenever the user is about to start scrolling to a view
     /// controller.
@@ -13,6 +14,7 @@ public protocol PageViewControllerDelegate: AnyObject {
     ///   scrolling from.
     ///   - destinationViewController: The view controller the user is
     ///   scrolling towards.
+    @objc optional
     func pageViewController(
         _ pageViewController: PageViewController,
         willStartScrollingFrom startingViewController: UIViewController,
@@ -30,6 +32,7 @@ public protocol PageViewControllerDelegate: AnyObject {
     ///   towards one of the edges.
     ///   - progress: The progress of the scroll transition. Between 0
     ///   and 1.
+    @objc optional
     func pageViewController(
         _ pageViewController: PageViewController,
         isScrollingFrom startingViewController: UIViewController,
@@ -47,10 +50,29 @@ public protocol PageViewControllerDelegate: AnyObject {
     ///   scrolling towards.
     ///   - transitionSuccessful: A boolean indicating whether the
     ///   transition completed, or was cancelled by the user.
+    @objc optional
     func pageViewController(
         _ pageViewController: PageViewController,
         didFinishScrollingFrom startingViewController: UIViewController,
         destinationViewController: UIViewController,
         transitionSuccessful: Bool
+    )
+
+    @objc optional
+    func pageViewController(
+        _ pageViewController: PageViewController,
+        didAddViewController viewController: UIViewController
+    )
+
+    @objc optional
+    func pageViewController(
+        _ pageViewController: PageViewController,
+        didRemoveViewController viewController: UIViewController
+    )
+
+    @objc optional
+    func pageViewController(
+        _ pageViewController: PageViewController,
+        didChangeScrollState isScrolling: Bool
     )
 }

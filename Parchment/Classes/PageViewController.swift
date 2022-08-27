@@ -3,7 +3,7 @@ import UIKit
 /// PageViewController is a replacement for `UIPageViewController`
 /// using `UIScrollView`. It provides detailed delegate methods, which
 /// is the main issue with `UIPageViewController`.
-public final class PageViewController: UIViewController {
+open class PageViewController: UIViewController {
     // MARK: Public Properties
 
     public weak var dataSource: PageViewControllerDataSource?
@@ -14,18 +14,18 @@ public final class PageViewController: UIViewController {
     }
 
     /// The view controller before the selected view controller.
-    public var beforeViewController: UIViewController? {
+    open var beforeViewController: UIViewController? {
         return manager.previousViewController
     }
 
     /// The currently selected view controller. Can be `nil` if no view
     /// controller is selected.
-    public var selectedViewController: UIViewController? {
+    open var selectedViewController: UIViewController? {
         return manager.selectedViewController
     }
 
     /// The view controller after the selected view controller.
-    private var afterViewController: UIViewController? {
+    open var afterViewController: UIViewController? {
         return manager.nextViewController
     }
 
@@ -59,6 +59,13 @@ public final class PageViewController: UIViewController {
                 scrollView.alwaysBounceHorizontal = true
                 scrollView.alwaysBounceVertical = false
             }
+        }
+    }
+
+    public private(set) var isScrolling = false {
+        didSet {
+            guard oldValue != isScrolling else { return }
+            delegate?.pageViewController?(self, didChangeScrollState: isScrolling)
         }
     }
 
@@ -136,7 +143,7 @@ public final class PageViewController: UIViewController {
         manager.dataSource = self
     }
 
-    public override func viewDidLoad() {
+    open override func viewDidLoad() {
         super.viewDidLoad()
         view.addSubview(scrollView)
         scrollView.delegate = self
@@ -146,33 +153,33 @@ public final class PageViewController: UIViewController {
         }
     }
 
-    public override func viewWillLayoutSubviews() {
+    open override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         scrollView.frame = view.bounds
         manager.viewWillLayoutSubviews()
     }
 
-    public override func viewWillAppear(_ animated: Bool) {
+    open override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         manager.viewWillAppear(animated)
     }
 
-    public override func viewDidAppear(_ animated: Bool) {
+    open override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         manager.viewDidAppear(animated)
     }
 
-    public override func viewWillDisappear(_ animated: Bool) {
+    open override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         manager.viewWillDisappear(animated)
     }
 
-    public override func viewDidDisappear(_ animated: Bool) {
+    open override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         manager.viewDidDisappear(animated)
     }
 
-    public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+    open override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: { _ in
             self.manager.viewWillTransitionSize()
@@ -197,6 +204,10 @@ public final class PageViewController: UIViewController {
         manager.removeAll()
     }
 
+    public func reloadAround() {
+        manager.reloadAround()
+    }
+
     // MARK: Private Methods
 
     private func setContentOffset(_ value: CGFloat, animated: Bool) {
@@ -217,11 +228,26 @@ public final class PageViewController: UIViewController {
 
 extension PageViewController: UIScrollViewDelegate {
     public func scrollViewWillBeginDragging(_: UIScrollView) {
+        isScrolling = true
         manager.willBeginDragging()
     }
 
     public func scrollViewWillEndDragging(_: UIScrollView, withVelocity _: CGPoint, targetContentOffset _: UnsafeMutablePointer<CGPoint>) {
         manager.willEndDragging()
+    }
+
+    public func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if decelerate == false {
+            isScrolling = false
+        }
+    }
+
+    public func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+        isScrolling = false
+    }
+
+    public func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
+        isScrolling = false
     }
 
     public func scrollViewDidScroll(_: UIScrollView) {
@@ -370,6 +396,7 @@ extension PageViewController: PageViewManagerDelegate {
         addChild(viewController)
         scrollView.addSubview(viewController.view)
         viewController.didMove(toParent: self)
+        delegate?.pageViewController?(self, didAddViewController: viewController)
     }
 
     func removeViewController(_ viewController: UIViewController) {
@@ -377,6 +404,7 @@ extension PageViewController: PageViewManagerDelegate {
         viewController.removeFromParent()
         viewController.view.removeFromSuperview()
         viewController.didMove(toParent: nil)
+        delegate?.pageViewController?(self, didRemoveViewController: viewController)
     }
 
     func beginAppearanceTransition(isAppearing: Bool, viewController: UIViewController, animated: Bool) {
@@ -391,7 +419,7 @@ extension PageViewController: PageViewManagerDelegate {
         from selectedViewController: UIViewController,
         to destinationViewController: UIViewController
     ) {
-        delegate?.pageViewController(
+        delegate?.pageViewController?(
             self,
             willStartScrollingFrom: selectedViewController,
             destinationViewController: destinationViewController
@@ -403,7 +431,7 @@ extension PageViewController: PageViewManagerDelegate {
         to destinationViewController: UIViewController,
         transitionSuccessful: Bool
     ) {
-        delegate?.pageViewController(
+        delegate?.pageViewController?(
             self,
             didFinishScrollingFrom: selectedViewController,
             destinationViewController: destinationViewController,
@@ -416,7 +444,7 @@ extension PageViewController: PageViewManagerDelegate {
         to destinationViewController: UIViewController?,
         progress: CGFloat
     ) {
-        delegate?.pageViewController(
+        delegate?.pageViewController?(
             self,
             isScrollingFrom: selectedViewController,
             destinationViewController: destinationViewController,

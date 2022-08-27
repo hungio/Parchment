@@ -154,6 +154,32 @@ final class PageViewManager {
         }
     }
 
+    func reloadAround() {
+        guard nextViewController == nil || previousViewController == nil else { return }
+        guard let viewController = selectedViewController else { return }
+
+        var hasChanged = false
+        if nextViewController == nil {
+            if let nextViewController = dataSource?.viewControllerAfter(viewController) {
+                delegate?.addViewController(nextViewController)
+                self.nextViewController = nextViewController
+                hasChanged = true
+            }
+        }
+
+        if previousViewController == nil {
+            if let previousViewController = dataSource?.viewControllerBefore(viewController) {
+                delegate?.addViewController(previousViewController)
+                self.previousViewController = previousViewController
+                hasChanged = true
+            }
+        }
+
+        if hasChanged {
+            layoutsViews()
+        }
+    }
+
     func viewWillLayoutSubviews() {
         layoutsViews()
     }
